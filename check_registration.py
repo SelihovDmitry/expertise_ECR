@@ -7,13 +7,11 @@ import time
 
 fr = Dispatch('Addin.DRvFR')
 
-print('Начало работы, подключение к ККТ')
-
-# log_file_name = 'log_' + dt.datetime.isoformat(dt.datetime.now(), sep='_')[:-7] + '.txt'
-log_file_name = 'log_' + str(dt.datetime.date(dt.datetime.now())) + '.txt'
-logs_file_path = 'logs/' + log_file_name
+logs_file_path = 'result.txt'
 
 def connecting_to_ecr():
+
+    print('Начало работы, подключение к ККТ')
 
     with open(logs_file_path, 'w+') as log:  # w - открытие (если нет - создается) файла на запись
         log.write(f'{dt.datetime.now()}: Начало тестирования ККТ \n')
@@ -29,9 +27,11 @@ def connecting_to_ecr():
             fr.GetDeviceMetrics()
             log.write(
                 f'{dt.datetime.now()}: Модель ККТ {fr.UDescription}, прошивка {fr.ECRSoftVersion} от {dt.datetime.date(fr.ECRSoftDate)}\n')
+            return True
         else:
-            print(fr.resultcode)
+            print(f'Подключение не удалось, код ошибки: {fr.resultcode}, {fr.resultcodedescription}')
             log.write(f'{dt.datetime.now()}: Подключение не удалось, код ошибки: {fr.resultcode}, {fr.resultcodedescription}\n')
+            return False
 
 
 class ECR:
@@ -44,6 +44,21 @@ class ECR:
         fr.ShowTagNumber = True
         fr.FNGetDocumentAsString()
         return fr.StringForPrinting  # возвращаем документ из ФН в виде строки
+
+    def registration_report(self):
+        # метод получения отчета о регистрации
+        print('Считываем отчет о регистрации из ФН')
+        fr.DocumentNumber = 1
+        fr.ShowTagNumber = True
+        fr.FNGetDocumentAsString()
+        time.sleep(1)
+        result = fr.StringForPrinting
+        with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
+            log.seek(0, 2)  # перемещаем курсор на последжнюю строку файла - для ДОзаписи вниз
+            log.write(
+                f'{dt.datetime.now()}: Отчет о регистрации, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
+            log.write(f'Получен чек \n{result}\n')
+        return result  # возвращаем документ из ФН в виде строки
 
     def open_session(self):
         # метод открытия смены
@@ -58,29 +73,103 @@ class ECR:
             fr.Disconnect()
             return result
 
-    def fn_operation_min(self, price=1.11, quantity=1):
-        # метод пробития чека на ККТ, возвращает текст чека из ФН
-        print('Регистрируется простой кассовый чек')
-        self.price = price
-        self.quantity = quantity
+    def cheque_without_position(self):
+        # Проверка формирования кассового чека без товарной позиции
+        print('Регистрируется кассовый чек без товарной позиции')
+
+        with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
+            log.seek(0, 2)  # перемещаем курсор на последнюю строку файла - для записи вниз
+            fr.GetECRStatus() # проверяем режим ККТ, если не 2 - выходим
+            if fr.ECRMode == 2:
+                fr.OpenCheck()
+                fr.FNCloseCheckEx()
+                time.sleep(1)  # задержка - даем время на печать на всякий случай
+                log.write(
+                    f'{dt.datetime.now()}: Регистрация кассового чека без товарной позиции, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
+                if fr.resultcode == 0:
+                    result = self._get_cheque_from_fn()
+                    log.write(f'Получен чек \n{result}\n')
+                    return result
+                else:
+                    print(f'Регистрация кассового чека без товарной позиции, код ошибки {fr.resultcode}, {fr.resultcodedescription}')
+                    fr.CancelCheck()
+
+                fr.Disconnect()
+            else:
+                return print(f'ККТ не в режиме 2, режим ККТ: {fr.ECRMode}')
+
+    def cheque_with_different_tax_type(self):
+        # проверка формирования кассового чека с разными системами налогообложения
+        tax_types = {1: 'ОСН',
+                     2: 'УСН доход',
+                     4: 'УСН доход - расход',
+                     16: 'ЕСХН',
+                     32: 'Патент'}
+        for tax_type_value, tax_type_name in tax_types.items():
+            print(f'Регистрируется кассовый чек c СНО {tax_type_name}')
+
+            with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
+                log.seek(0, 2)  # перемещаем курсор на последжнюю строку файла - для ДОзаписи вниз
+                fr.GetECRStatus()  # проверяем режим ККТ, если не 2 - выходим
+                if fr.ECRMode == 2:
+                    fr.price = 1.11
+                    fr.quantity = 1
+                    fr.FNOperation()
+
+                    fr.Summ1 = 100
+                    fr.TaxType = tax_type_value
+                    fr.FNCloseCheckEx()
+                    time.sleep(3)  # задержка - даем время на печать на всякий случай
+                    log.write(
+                        f'{dt.datetime.now()}: Регистрация чека c СНО {tax_type_name}, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
+                    if fr.resultcode == 0:
+                        result = self._get_cheque_from_fn()
+                        log.write(f'Получен чек \n{result}\n')
+                        # return result
+                    else:
+                        print(
+                            f'Регистрация чека c СНО {tax_type_name}, код ошибки {fr.resultcode}, {fr.resultcodedescription}')
+                        fr.CancelCheck()
+
+                    fr.Disconnect()
+
+                else:
+                    return print(f'ККТ не в режиме 2, режим ККТ: {fr.ECRMode}')
+
+    def cheque_with_several_positions(self):
+        # проверка формирования кассового чека с несколькими товарными позициями
+        print('Регистрируется кассовый чек с несколькими позициями')
 
         with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
             log.seek(0, 2)  # перемещаем курсор на последжнюю строку файла - для ДОзаписи вниз
             fr.GetECRStatus() # проверяем режим ККТ, если не 2 - выходим
-            if fr.ECRMode == 2 or fr.ECRMode == 8:
-                fr.price = self.price
-                fr.quantity = self.quantity
+            if fr.ECRMode == 2:
+                fr.price = 1.11
+                fr.quantity = 1
+                fr.FNOperation()
+
+                fr.price = 2.22
+                fr.quantity = 2
+                fr.FNOperation()
+
+                fr.price = 3.33
+                fr.quantity = 3
                 fr.FNOperation()
 
                 fr.Summ1 = 100
                 fr.FNCloseCheckEx()
                 time.sleep(3)  # задержка - даем время на печать на всякий случай
                 log.write(
-                    f'{dt.datetime.now()}: Регистрация простого чека, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
-                result = self._get_cheque_from_fn()
-                log.write(f'Получен чек \n{result}')
+                    f'{dt.datetime.now()}: Регистрация чека с несколькими позициями, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
+                if fr.resultcode == 0:
+                    result = self._get_cheque_from_fn()
+                    log.write(f'Получен чек \n{result}\n')
+                    return result
+                else:
+                    print(
+                        f'Регистрация чека с несколькими позициями, код ошибки {fr.resultcode}, {fr.resultcodedescription}')
+                    fr.CancelCheck()
                 fr.Disconnect()
-                return result
             else:
                 return print(f'ККТ не в режиме 2, режим ККТ: {fr.ECRMode}')
 
@@ -164,21 +253,6 @@ class ECR:
             fr.Disconnect()
             return result
 
-    def registration_report(self):
-        # метод получения отчета о регистрации
-        print('Считываем отчет о регистрации из ФН')
-        fr.DocumentNumber = 1
-        fr.ShowTagNumber = True
-        fr.FNGetDocumentAsString()
-        time.sleep(1)
-        result = fr.StringForPrinting
-        with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
-            log.seek(0, 2)  # перемещаем курсор на последжнюю строку файла - для ДОзаписи вниз
-            log.write(
-                f'{dt.datetime.now()}: Отчет о регистрации, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
-            log.write(f'Получен чек \n{result}\n')
-        return result  # возвращаем документ из ФН в виде строки
-
     def cheque_correction(self, price=1.11, quantity=1):
         # метод пробития чека на ККТ, возвращает текст чека из ФН
         print('Регистрируется чек коррекции')
@@ -213,4 +287,4 @@ if __name__ == '__main__':
     print('Hello you in module check_registration')
     ShtrihZnak = ECR()
     # print
-    print(ShtrihZnak.registration_report())
+    ShtrihZnak.cheque_with_different_tax_type()
