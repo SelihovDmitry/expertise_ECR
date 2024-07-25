@@ -26,5 +26,5 @@ def main():
 
 
 if __name__ == '__main__':
-    print('Hello you in module main 2.1')
+    print('Hello you in module main')
     main()
