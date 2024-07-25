@@ -6,6 +6,8 @@ import datetime as dt
 import time
 
 fr = Dispatch('Addin.DRvFR')
+wait_cheque_timeout = 1
+
 
 logs_file_path = 'result.txt'
 
@@ -51,7 +53,7 @@ class ECR:
         fr.DocumentNumber = 1
         fr.ShowTagNumber = True
         fr.FNGetDocumentAsString()
-        time.sleep(1)
+        time.sleep(wait_cheque_timeout)
         result = fr.StringForPrinting
         with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
             log.seek(0, 2)  # перемещаем курсор на последжнюю строку файла - для ДОзаписи вниз
@@ -66,7 +68,7 @@ class ECR:
         with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
             log.seek(0, 2)  # перемещаем курсор на последжнюю строку файла - для ДОзаписи вниз
             fr.OpenSession()
-            time.sleep(3) # задержка - даем время на печать на всякий случай
+            time.sleep(wait_cheque_timeout) # задержка - даем время на печать на всякий случай
             log.write(f'{dt.datetime.now()}: Открытие смены, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
             result = self._get_cheque_from_fn()
             log.write(f'Получен чек \n{result}')
@@ -83,7 +85,7 @@ class ECR:
             if fr.ECRMode == 2:
                 fr.OpenCheck()
                 fr.FNCloseCheckEx()
-                time.sleep(1)  # задержка - даем время на печать на всякий случай
+                time.sleep(wait_cheque_timeout)  # задержка - даем время на печать на всякий случай
                 log.write(
                     f'{dt.datetime.now()}: Регистрация кассового чека без товарной позиции, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
                 if fr.resultcode == 0:
@@ -119,7 +121,7 @@ class ECR:
                     fr.Summ1 = 100
                     fr.TaxType = tax_type_value
                     fr.FNCloseCheckEx()
-                    time.sleep(3)  # задержка - даем время на печать на всякий случай
+                    time.sleep(wait_cheque_timeout)  # задержка - даем время на печать на всякий случай
                     log.write(
                         f'{dt.datetime.now()}: Регистрация чека c СНО {tax_type_name}, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
                     if fr.resultcode == 0:
@@ -158,7 +160,7 @@ class ECR:
 
                 fr.Summ1 = 100
                 fr.FNCloseCheckEx()
-                time.sleep(3)  # задержка - даем время на печать на всякий случай
+                time.sleep(wait_cheque_timeout)  # задержка - даем время на печать на всякий случай
                 log.write(
                     f'{dt.datetime.now()}: Регистрация чека с несколькими позициями, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
                 if fr.resultcode == 0:
@@ -172,6 +174,49 @@ class ECR:
                 fr.Disconnect()
             else:
                 return print(f'ККТ не в режиме 2, режим ККТ: {fr.ECRMode}')
+
+    def cheque_with_different_tax(self):
+        # проверка формирования кассового чека с разными налоговыми ставками
+        taxes = {1: 'НДС 20%',
+                 2: 'НДС 10%',
+                 3: 'НДС 0%',
+                 4: 'БЕЗ НДС',
+                 5: 'НДС 20/120',
+                 6: 'НДС 10/110'
+                 }
+        for tax_value, tax_name in taxes.items():
+            print(f'Регистрируется кассовый чек c налоговой ставкой {tax_name}')
+
+            with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
+                log.seek(0, 2)  # перемещаем курсор на последнюю строку файла - для записи вниз
+                fr.GetECRStatus()  # проверяем режим ККТ, если не 2 - выходим
+                if fr.ECRMode == 2:
+                    fr.price = 1.11
+                    fr.quantity = 1
+                    fr.tax1 = tax_value
+                    fr.FNOperation()
+
+                    fr.Summ1 = 100
+                    fr.TaxType = 1
+                    fr.FNCloseCheckEx()
+                    time.sleep(wait_cheque_timeout)  # задержка - даем время на печать на всякий случай
+                    log.write(
+                        f'{dt.datetime.now()}: Регистрация чека c налоговой ставкой {tax_name}, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
+                    if fr.resultcode == 0:
+                        result = self._get_cheque_from_fn()
+                        log.write(f'Получен чек \n{result}\n')
+                        # return result
+                    else:
+                        print(
+                            f'Регистрация чека c налоговой ставкой {tax_name}, код ошибки {fr.resultcode}, {fr.resultcodedescription}')
+                        fr.CancelCheck()
+
+                    fr.Disconnect()
+
+                else:
+                    return print(f'ККТ не в режиме 2, режим ККТ: {fr.ECRMode}')
+
+
 
     def fn_operation_with_marking(self, price=1.11, quantity=1):
         # пробитие чека с маркировкой
@@ -193,7 +238,7 @@ class ECR:
                 fr.BarCode = qr
                 fr.ItemStatus = 1
                 fr.FNSendItemBarcode()
-                time.sleep(1)
+                time.sleep(wait_cheque_timeout)
                 print(f'Передача марки, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
                 log.write(
                     f'{dt.datetime.now()}: Передача марки, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
@@ -217,7 +262,7 @@ class ECR:
 
                 fr.Summ1 = 100
                 fr.FNCloseCheckEx()
-                time.sleep(3)  # задержка - даем время на печать на всякий случай
+                time.sleep(wait_cheque_timeout)  # задержка - даем время на печать на всякий случай
                 log.write(
                     f'{dt.datetime.now()}: Регистрация чека с маркировкой, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
                 result = self._get_cheque_from_fn()
@@ -233,7 +278,7 @@ class ECR:
         with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
             log.seek(0, 2)  # перемещаем курсор на последжнюю строку файла - для ДОзаписи вниз
             fr.FNCloseSession()
-            time.sleep(3)  # задержка - даем время на печать на всякий случай
+            time.sleep(wait_cheque_timeout)  # задержка - даем время на печать на всякий случай
             log.write(f'{dt.datetime.now()}: Закрытие смены, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
             result = self._get_cheque_from_fn()
             log.write(f'Получен чек \n{result}')
@@ -246,7 +291,7 @@ class ECR:
         with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
             log.seek(0, 2)  # перемещаем курсор на последжнюю строку файла - для ДОзаписи вниз
             fr.FNBuildCalculationStateReport()
-            time.sleep(3)  # задержка - даем время на печать на всякий случай
+            time.sleep(wait_cheque_timeout)  # задержка - даем время на печать на всякий случай
             log.write(f'{dt.datetime.now()}: Отчет о состоянии расчетов, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
             result = self._get_cheque_from_fn()
             log.write(f'Получен чек \n{result}\n')
@@ -271,7 +316,7 @@ class ECR:
 
                 fr.Summ1 = 100
                 fr.FNCloseCheckEx()
-                time.sleep(3)  # задержка - даем время на печать на всякий случай
+                time.sleep(wait_cheque_timeout)  # задержка - даем время на печать на всякий случай
                 log.write(
                     f'{dt.datetime.now()}: Регистрация чека коррекции, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
                 result = self._get_cheque_from_fn()
@@ -287,4 +332,4 @@ if __name__ == '__main__':
     print('Hello you in module check_registration')
     ShtrihZnak = ECR()
     # print
-    ShtrihZnak.cheque_with_different_tax_type()
+    ShtrihZnak.cheque_with_different_tax()
