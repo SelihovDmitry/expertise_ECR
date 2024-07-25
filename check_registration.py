@@ -216,7 +216,48 @@ class ECR:
                 else:
                     return print(f'ККТ не в режиме 2, режим ККТ: {fr.ECRMode}')
 
+    def cheque_with_all_tax(self):
+        # проверка формирования кассового чека со всеми налоговыми ставками
+        taxes = {1: 'НДС 20%',
+                 2: 'НДС 10%',
+                 3: 'НДС 0%',
+                 4: 'БЕЗ НДС',
+                 5: 'НДС 20/120',
+                 6: 'НДС 10/110'
+                 }
 
+        print(f'Регистрируется кассовый чек со всеми налоговыми ставками')
+
+        with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
+            log.seek(0, 2)  # перемещаем курсор на последнюю строку файла - для записи вниз
+            fr.GetECRStatus()  # проверяем режим ККТ, если не 2 - выходим
+            if fr.ECRMode == 2:
+                for tax_value, tax_name in taxes.items():
+                    fr.StringForPrinting = f'товар с налоговой ставкой {tax_name}'
+                    fr.price = 1.11
+                    fr.quantity = 1
+                    fr.tax1 = tax_value
+                    fr.FNOperation()
+
+                fr.Summ1 = 100
+                fr.TaxType = 1
+                fr.FNCloseCheckEx()
+                time.sleep(wait_cheque_timeout)  # задержка - даем время на печать на всякий случай
+                log.write(
+                    f'{dt.datetime.now()}: Регистрация чека со всеми налоговыми ставками, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
+                if fr.resultcode == 0:
+                    result = self._get_cheque_from_fn()
+                    log.write(f'Получен чек \n{result}\n')
+                    # return result
+                else:
+                    print(
+                        f'Регистрация чека со всеми налоговыми ставками, код ошибки {fr.resultcode}, {fr.resultcodedescription}')
+                    fr.CancelCheck()
+
+                fr.Disconnect()
+
+            else:
+                return print(f'ККТ не в режиме 2, режим ККТ: {fr.ECRMode}')
 
     def fn_operation_with_marking(self, price=1.11, quantity=1):
         # пробитие чека с маркировкой
@@ -332,4 +373,4 @@ if __name__ == '__main__':
     print('Hello you in module check_registration')
     ShtrihZnak = ECR()
     # print
-    ShtrihZnak.cheque_with_different_tax()
+    ShtrihZnak.cheque_with_all_tax()
