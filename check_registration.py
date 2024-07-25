@@ -259,6 +259,51 @@ class ECR:
             else:
                 return print(f'ККТ не в режиме 2, режим ККТ: {fr.ECRMode}')
 
+    def cheque_correction(self, price=1.11, quantity=1):
+        # проверка формирования кассового чека коррекции с внесением и выплатой денежных средств;
+        check_corr_types = {0: 'Приход',
+                       1: 'Расход',
+                       2: 'Возврат прихода',
+                       3: 'Возврат расхода'}
+        check_types = [1, 3, 2, 4]
+        check_types_index = 0
+
+        for check_type_value, check_type_name in check_corr_types.items():
+            print(f'Регистрируется чек коррекции {check_type_name}')
+            self.price = price
+            self.quantity = quantity
+
+            with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
+                log.seek(0, 2)  # перемещаем курсор на последжнюю строку файла - для ДОзаписи вниз
+                fr.GetECRStatus()  # проверяем режим ККТ, если не 2 - выходим
+                if fr.ECRMode == 2:
+                    fr.CheckType = check_type_value
+                    fr.FNOpenCheckCorrection()
+                    fr.CheckType = check_types[check_types_index]
+                    fr.price = self.price
+                    fr.quantity = self.quantity
+                    fr.FNOperation()
+
+                    fr.Summ1 = 100
+                    fr.FNCloseCheckEx()
+                    time.sleep(wait_cheque_timeout)  # задержка - даем время на печать на всякий случай
+                    log.write(
+                        f'{dt.datetime.now()}: Регистрация чека коррекции {check_type_name}, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
+
+                    if fr.resultcode == 0:
+                        result = self._get_cheque_from_fn()
+                        log.write(f'Получен чек \n{result}\n')
+                        # return result
+                    else:
+                        print(
+                            f'Регистрация чека коррекции {check_type_name}, код ошибки {fr.resultcode}, {fr.resultcodedescription}')
+                        fr.CancelCheck()
+                    fr.Disconnect()
+                else:
+                    return print(f'ККТ не в режиме 2, режим ККТ: {fr.ECRMode}')
+            check_types_index += 1
+
+
     def fn_operation_with_marking(self, price=1.11, quantity=1):
         # пробитие чека с маркировкой
         print('Регистрируется кассовый чек с маркировкой')
@@ -339,38 +384,10 @@ class ECR:
             fr.Disconnect()
             return result
 
-    def cheque_correction(self, price=1.11, quantity=1):
-        # метод пробития чека на ККТ, возвращает текст чека из ФН
-        print('Регистрируется чек коррекции')
-        self.price = price
-        self.quantity = quantity
-
-        with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
-            log.seek(0, 2)  # перемещаем курсор на последжнюю строку файла - для ДОзаписи вниз
-            fr.GetECRStatus()  # проверяем режим ККТ, если не 2 - выходим
-            if fr.ECRMode == 2:
-                fr.CheckType = 0
-                fr.FNOpenCheckCorrection()
-                fr.price = self.price
-                fr.quantity = self.quantity
-                fr.FNOperation()
-
-                fr.Summ1 = 100
-                fr.FNCloseCheckEx()
-                time.sleep(wait_cheque_timeout)  # задержка - даем время на печать на всякий случай
-                log.write(
-                    f'{dt.datetime.now()}: Регистрация чека коррекции, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
-                result = self._get_cheque_from_fn()
-                log.write(f'Получен чек \n{result}')
-                fr.Disconnect()
-                return result
-            else:
-                return print(f'ККТ не в режиме 2, режим ККТ: {fr.ECRMode}')
-
 
 
 if __name__ == '__main__':
     print('Hello you in module check_registration')
     ShtrihZnak = ECR()
     # print
-    ShtrihZnak.cheque_with_all_tax()
+    ShtrihZnak.cheque_correction()
