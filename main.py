@@ -27,6 +27,10 @@ def main():
 
         ecr_on_test.cheque_correction()
 
+        ecr_on_test.cheque_with_different_agent()
+
+        ecr_on_test.cheque_with_several_checktype()
+
         ecr_on_test.close_session()
 
 
