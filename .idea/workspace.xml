@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6517dda6-fe48-46b4-a38f-8e1d55a12769" name="Changes" comment="add check_registration module and req.txt">
+    <list default="true" id="6517dda6-fe48-46b4-a38f-8e1d55a12769" name="Changes" comment="add many func">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/expertise_ECR.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/expertise_ECR.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/check_registration.py" beforeDir="false" afterPath="$PROJECT_DIR$/check_registration.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
@@ -17,35 +19,36 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "SelihovDmitry"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;SelihovDmitry&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/SelihovDmitry/expertise_ECR.git",
-    "accountId": "67b35a11-d311-4b86-ab31-7dd20472aaf1"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/SelihovDmitry/expertise_ECR.git&quot;,
+    &quot;accountId&quot;: &quot;67b35a11-d311-4b86-ab31-7dd20472aaf1&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 5
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
   <component name="ProjectId" id="2jdd3Wvmcv70soDu7kIbIhb4XG5" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.check_registration.executor": "Run",
-    "Python.main.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.check_registration.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.customizations&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Python.main">
     <configuration name="check_registration" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="expertise_ECR" />
@@ -129,13 +132,76 @@
       <option name="project" value="LOCAL" />
       <updated>1721723493531</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="test 52">
+      <option name="closed" value="true" />
+      <created>1721895186375</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1721895186375</updated>
+    </task>
+    <task id="LOCAL-00004" summary="add cheque_with_different_tax">
+      <option name="closed" value="true" />
+      <created>1721898937180</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1721898937180</updated>
+    </task>
+    <task id="LOCAL-00005" summary="add cheque_with_all_tax">
+      <option name="closed" value="true" />
+      <created>1721900178057</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1721900178057</updated>
+    </task>
+    <task id="LOCAL-00006" summary="edit README">
+      <option name="closed" value="true" />
+      <created>1721900309911</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1721900309911</updated>
+    </task>
+    <task id="LOCAL-00007" summary="add check correction">
+      <option name="closed" value="true" />
+      <created>1721917511495</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1721917511495</updated>
+    </task>
+    <task id="LOCAL-00008" summary="add check correction in main">
+      <option name="closed" value="true" />
+      <created>1721919035385</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1721919035385</updated>
+    </task>
+    <task id="LOCAL-00009" summary="add many func">
+      <option name="closed" value="true" />
+      <created>1721987731082</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1721987731082</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="first commit" />
     <MESSAGE value="add check_registration module and req.txt" />
-    <option name="LAST_COMMIT_MESSAGE" value="add check_registration module and req.txt" />
+    <MESSAGE value="test 52" />
+    <MESSAGE value="add cheque_with_different_tax" />
+    <MESSAGE value="add cheque_with_all_tax" />
+    <MESSAGE value="edit README" />
+    <MESSAGE value="add check correction" />
+    <MESSAGE value="add check correction in main" />
+    <MESSAGE value="add many func" />
+    <option name="LAST_COMMIT_MESSAGE" value="add many func" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -144,6 +210,11 @@
           <url>file://$PROJECT_DIR$/main.py</url>
           <line>1</line>
           <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/check_registration.py</url>
+          <line>272</line>
+          <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

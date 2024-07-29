@@ -81,6 +81,7 @@ class ECR:
                 log.write(f'Получен чек \n{result}')
             else:
                 print(f' - код ошибки {fr.resultcode}, {fr.resultcodedescription}')
+                return False
             fr.Disconnect()
             return result
 
@@ -390,7 +391,43 @@ class ECR:
                 fr.FNCloseCheckEx()
                 time.sleep(wait_cheque_timeout)  # задержка - даем время на печать на всякий случай
                 log.write(
-                    f'{dt.datetime.now()}: Регистрация чека с несколькими позициями, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
+                    f'{dt.datetime.now()}: Регистрация чека с разными признаками расчета (тег 1054), код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
+                if fr.resultcode == 0:
+                    print('     -  OK')
+                    result = self._get_cheque_from_fn()
+                    log.write(f'Получен чек \n{result}\n')
+                    return result
+                else:
+                    print(f' - код ошибки {fr.resultcode}, {fr.resultcodedescription}')
+                    fr.CancelCheck()
+                fr.Disconnect()
+            else:
+                return print(f'ККТ не в режиме 2, режим ККТ: {fr.ECRMode}')
+
+    def cheque_with_customer_email(self):
+        # проверка возможности передачи кассового чека в электронной форме покупателю
+        print('Регистрируется кассовый чек с передачей e_mail покупателя', end='')
+
+        with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
+            log.seek(0, 2)  # перемещаем курсор на последжнюю строку файла - для ДОзаписи вниз
+            fr.GetECRStatus() # проверяем режим ККТ, если не 2 - выходим
+            if fr.ECRMode == 2:
+                fr.price = 1.11
+                fr.quantity = 1
+                fr.CheckType = 1
+                fr.FNOperation()
+                fr.CustomerEmail = 'buyer@mail.ru'
+                fr.FNSendCustomerEmail()
+                if fr.ResultCode != 0:
+                    print(f' - код ошибки {fr.resultcode}, {fr.resultcodedescription}')
+                    fr.CancelCheck()
+                    return
+
+                fr.Summ1 = 100
+                fr.FNCloseCheckEx()
+                time.sleep(wait_cheque_timeout)  # задержка - даем время на печать на всякий случай
+                log.write(
+                    f'{dt.datetime.now()}: Регистрация чека с передачей e_mail покупателя {fr.resultcode}, {fr.resultcodedescription}\n')
                 if fr.resultcode == 0:
                     print('     -  OK')
                     result = self._get_cheque_from_fn()
@@ -471,19 +508,26 @@ class ECR:
                 log.write(f'Получен чек \n{result}')
             else:
                 print(f' - код ошибки {fr.resultcode}, {fr.resultcodedescription}')
+                return False
             fr.Disconnect()
             return result
 
     def calculation_state_report(self):
         # метод снятия отчета о состоянии расчетов
-        print('Регистрируется документ отчета о состоянии расчетов')
+        print('Регистрируется документ отчета о состоянии расчетов', end='')
         with open(logs_file_path, 'r+') as log:  # r+ - открытие файла на чтение и изменение
             log.seek(0, 2)  # перемещаем курсор на последжнюю строку файла - для ДОзаписи вниз
             fr.FNBuildCalculationStateReport()
             time.sleep(wait_cheque_timeout)  # задержка - даем время на печать на всякий случай
-            log.write(f'{dt.datetime.now()}: Отчет о состоянии расчетов, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
-            result = self._get_cheque_from_fn()
-            log.write(f'Получен чек \n{result}\n')
+            if fr.resultcode == 0:
+                print('     -  OK')
+                log.write(f'{dt.datetime.now()}: Отчет о состоянии расчетов, код ошибки {fr.resultcode}, {fr.resultcodedescription}\n')
+                result = self._get_cheque_from_fn()
+                log.write(f'Получен чек \n{result}\n')
+            else:
+                print(f' - код ошибки {fr.resultcode}, {fr.resultcodedescription}')
+                return False
+
             fr.Disconnect()
             return result
 
@@ -493,4 +537,4 @@ if __name__ == '__main__':
     print('Hello you in module check_registration')
     ShtrihZnak = ECR()
     # print
-    ShtrihZnak.cheque_with_several_checktype()
+    ShtrihZnak.cheque_with_customer_email()
