@@ -6,7 +6,7 @@ import datetime as dt
 import time
 
 fr = Dispatch('Addin.DRvFR')
-wait_cheque_timeout = 1
+wait_cheque_timeout = 2
 
 
 logs_file_path = 'result.txt'
